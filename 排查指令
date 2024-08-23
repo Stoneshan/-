@@ -42,5 +42,15 @@ wireshark里的技巧：查询对应报文的内容
    数据链路层可以是 frame contains "abc"。
 
 
+对系统异常的追踪：
+  strace(syscall trace)工具：
+   使用方法：
+1、strace curl www.baidu.com
+
+2、strace -p 进程号
+   -c 统计每个系统调用消耗的时间和次数
+  timeout 5 strace -cp 进程号  //收集5秒钟的数据
+
+
 
 
