@@ -1,0 +1,46 @@
+压力测试：
+1、应用的承受能力
+    耗时指标
+    并发量（TPS）
+工具：
+   ab (apache benchmark):对http服务端发起测试，轻量级工具。（重量级工具：loadrunner 或者jmeter）
+apt-install apache2-utils(前提）
+使用：ab -c 100 -n 1000 https://www.baidu.com/abc（目标URL）
+      -c 发起100个并发
+      -n 总共发送的请求量
+      -k 开启长连接
+
+
+
+
+
+2、LB的连接处理能力
+  四层tcp支持的最大并发连接数
+
+
+3、网络承受能力
+   上行下带宽
+    丢包
+    延时
+
+包量（Packet per second）：衡量一台主机的网络处理能力。sar可以用来评估。
+
+sysstat工具集：
+1、sar -n DEV 1 10  #查看网卡性能
+2、iostat 1 10      #查看IO性能
+3、mpstat 2 5       查看CPU性能
+
+sar -n DEV  1
+
+
+Loadrunner 不仅可以发送巨大的请求量，而且可以模拟用户的复制行为，比如登录、浏览、加入购物车等。
+
+看看time_wait状态的连接数据：
+netstat -ant |awk '{++a[$6]} END{for (i in a) print i, a[i]}'
+ss -ant | awk '{++s[$1]}END{for(k in s) print k,s[k]}'
+
+
+源端口资源耗尽，本质是TIME_WAIT需要停留2MSL的时长。
+  修改位置：net.ipv4.tcp_max_tw_buckets 内核参数 默认是16384，改小后超过这个数值的连接就会被清除。
+            net.ipv4.ip_local_port_range  动态源端口的范围
+
