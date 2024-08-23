@@ -9,3 +9,38 @@
    指定抓包的大小，这样可以减少抓包的大小，大大降低采集的数据量
    因为如果不做限制，整个二层帧是1500 + 14(二层帧头）= 1514
 
+
+wireshark的命令行分析工具——tshark
+1、tshark -r 文件名  -T fields -e http.time | grep -v ^$    //获取耗时高的http事务
+
+2、tshark -r 文件名 -T fields -e frame.number -e http.time -e
+tcp.stream | sort -k2 -r | head -1 | awk '{print $3}' | xargs -n
+1 -I {} tshark -r captured.pcap -Y "tcp.stream eq {}"
+
+-T fields -e frame.number -e http.time -e tcp.stream：表示
+要展示数据包哪几个列的信息。frame.number表示帧号（包
+号）、http.time表示HTTP耗时、tcp.stream表示TCP流号。
+-Y "tcp.stream eq {}"：在管道符后面使用，指的是需要把这个
+TCP流号相关的数据包都展示出来。因为结合了xargs命令，所以
+eq后面是一个{}符号，这个值就是TCP流的编号（由awk命令输
+出）。
+
+3、 tshark -Y "tcp.analysis.retransmission || tcp.analysis.out_of_order"   //Y指定条件，抓重传和乱序的包
+    tcp.analysis有很多过滤条件，可以tshark -G | grep tcp.analysis  //来查找
+ 
+https交互排查：
+1、curl -vk https://站点名
+
+2、opensll s_client -tlsextdebug -showcerts -connect 站点名：443
+   如果报错在前面加strace追踪。
+
+
+wireshark里的技巧：查询对应报文的内容
+   应用层可以是 http contains "abc"；
+   传输层可以是 tcp contains "abc"；
+   网络层可以是 ip contains "abc"；
+   数据链路层可以是 frame contains "abc"。
+
+
+
+
