@@ -53,4 +53,62 @@ wireshark里的技巧：查询对应报文的内容
 
 
 
+主机信息统计工具：
+  netstat -s 可以统计传输层、网络层、数据链路层的质量，包括报文丢失、重传、重置等情况。
 
+不过现在主流是iproute2工具了（ip、ss、nstat），因为netstat主要是通过/proc文件系统收集信息的，而ss主要通过netlink内核接口获取数据的，
+netlink接口的效率要比/proc接口更高，所以ss速度更快。
+获取信息： ss -eit
+
+nstat 如果不加参数，每次运行时输出的数值，是从上一次被执行以来这些计数器的变化值。不用想netstat一样分两次执行，自己来看变化。
+
+
+mtr = traceroute + ping 
+使用：mtr -c 10 -r 8.8.8.8
+
+
+tcpdump  -n不对ip地址进行反向域名查询，加快效率。
+
+tcpdump -r file.pcap 'tcp[tcpflags] & (tcp-rst) != 0' -w rst.pcap  //对当前抓包进行过滤
+
+tshark -r lesson17-in-shorten.pcap -T fields -e http.response.code | grep -v ^$ | sort | uniq -c | sort -r  //统计文件中http状态码
+
+tshark -r 文件名 -T fields -e http.time | grep -v ^$  //解析文件中http事务的耗时
+
+tshark -r 文件名 -T fields -e frame.number -e http.time -e
+tcp.stream | sort -k2 -r | head -1 | awk '{print $3}' | xargs -n
+1 -I {} tshark -r captured.pcap -Y "tcp.stream eq {}"   //事务所在的整个TCP流的所有报文
+
+tshark -r file.cap -T fields -e tcp.analysis.initial_rtt | grep
+-v ^$  //tcp查看tcp初始往返时间
+
+tshark -n -q -r file.pcap -z
+"io,stat,0,tcp.analysis.retransmission"  //统计tcp重传包的数量
+
+tshark -i "Wireless Network Connection" -w file.pcap host 123.45.66.77  //抓包
+
+editcap -s 54 old.pcap new.pcap   //把已经抓的报文改小
+
+editcap --inject-secrets tls,key.log in.pcap out.pcap  //把TLS key文件跟抓包文件合并在一起
+
+TCP Window Full而言，它的意思是一端的在途字节数等于另一端的接收窗口:
+   Wireshark会根据发送出去的数据量和已经确认的数量，计算出在途字节数，然后跟另一端的接收窗口进行比较。如果两者相等，说明另一端的接收窗口已经被用满了
+TCP Zero Window:接收窗口为零。这是主动通告对端“自己的接收窗口已经为零，不要再发送数据了"。
+
+
+
+wireshark中 查二进制的条件：
+   tcp.payload contains 61-62-63    //abc字符
+    frame.time >="Mar 28, 2022 00:00:00"   //时间
+    tcp.flags.reset eq 1 #找到RST报文
+    tcp.flags.syn eq 1 #找到握手的SYN报文
+    tcp.flags.fin eq 1 #找到挥手的FIN报文
+
+    tcp.analysis.ack_rtt >0.2 and tcp.len == 0   //超过200ms才发回的确认报文
+    tcp.analysis.window_full
+    tcp.seq_raw eq 123456  //原始序列号
+   
+    http contains "uuidxxxxx"
+   tcp contains "uuidxxxxx"
+   ip contains "uuidxxxxx"
+   frame contains "uuidxxxxx"
