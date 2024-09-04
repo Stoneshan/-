@@ -1,0 +1,14 @@
+ip route add 10.1.1.1/20 via 10.1.1.254 dev eth0  //增加网段路由
+
+ip rule add from 192.168.1.0/24 table 10   // 192.168.1.0/24这个网段来的数据报，走路由表10
+ip rule add from 192.168.2.0/24 table 20   // 192.168.2.0/24这个网段来的数据报，走路由表20
+
+ip route add default scope global nexthop via 100.100.100.1 weight 1 nexthop via 200.200.200.1 weigth 2   //默认路由两个下一跳，权重为1:2
+
+ip route list table main  //查看main路由表中的路由
+
+echo 200 chao >> /etc/iproute2/rt_tables   //添加一个路由表chao
+ip rule add from 192.168.1.101 table chao  //来自192.168.1.101的数据包走chao表
+ip route add default via 1.1.1.1 dev eth3 table chao  //在路由表chao中添加路由规则
+ip route flush cache  //刷新路由
+
